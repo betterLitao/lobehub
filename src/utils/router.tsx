@@ -164,20 +164,6 @@ export const NavigatorRegistrar = memo(() => {
   return null;
 });
 
-/**
- * Route configuration object type (RouteObject-style for createBrowserRouter)
- */
-export interface RouteConfig {
-  children?: RouteConfig[];
-  element?: ReactElement;
-  errorElement?: ReactElement;
-  // HydrateFallback is ignored in declarative mode
-  HydrateFallback?: ComponentType;
-  index?: boolean;
-  loader?: (args: { params: Record<string, string | undefined> }) => unknown;
-  path?: string;
-}
-
 export interface CreateAppRouterOptions {
   basename?: string;
 }
@@ -194,11 +180,11 @@ export interface CreateAppRouterOptions {
  *   </SPAGlobalProvider>
  * );
  */
-export function createAppRouter(routes: RouteConfig[], options?: CreateAppRouterOptions) {
+export function createAppRouter(routes: RouteObject[], options?: CreateAppRouterOptions) {
   return createBrowserRouter(
     [
       {
-        children: routes as RouteObject[],
+        children: routes,
         element: (
           <BusinessGlobalProvider>
             <Outlet />
