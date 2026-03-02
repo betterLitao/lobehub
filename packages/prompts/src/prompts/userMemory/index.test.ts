@@ -350,6 +350,55 @@ describe('promptUserMemory', () => {
     });
   });
 
+  describe('persona only', () => {
+    it('should format persona with narrative and tagline', () => {
+      const result = promptUserMemory({
+        memories: {
+          persona: {
+            narrative: 'A senior software engineer based in Shanghai who specializes in frontend development with React and TypeScript. Passionate about open source and building developer tools.',
+            tagline: 'Senior frontend engineer & OSS contributor',
+          },
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should format persona with only narrative (no tagline)', () => {
+      const result = promptUserMemory({
+        memories: {
+          persona: {
+            narrative: 'A product designer who transitioned from engineering. Enjoys bridging the gap between design and development.',
+          },
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should skip persona with null values', () => {
+      const result = promptUserMemory({
+        memories: {
+          persona: {
+            narrative: null,
+            tagline: null,
+          },
+        },
+      });
+      expect(result).toBe('');
+    });
+
+    it('should skip persona with empty string values', () => {
+      const result = promptUserMemory({
+        memories: {
+          persona: {
+            narrative: '',
+            tagline: '',
+          },
+        },
+      });
+      expect(result).toBe('');
+    });
+  });
+
   describe('mixed memory types', () => {
     it('should format all memory types together', () => {
       const result = promptUserMemory({
@@ -469,6 +518,39 @@ describe('promptUserMemory', () => {
           preferences: [
             {
               conclusionDirectives: 'Always include error handling in examples',
+              id: 'pref-1',
+            },
+          ],
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should format persona combined with other memory types', () => {
+      const result = promptUserMemory({
+        memories: {
+          contexts: [
+            {
+              description: 'Working on AI products',
+              id: 'ctx-1',
+              title: 'Current Work',
+            },
+          ],
+          identities: [
+            {
+              description: 'User is a senior engineer',
+              id: 'id-1',
+              role: 'Senior Engineer',
+              type: 'professional',
+            },
+          ],
+          persona: {
+            narrative: 'A tech lead who focuses on AI-powered developer tools and has a strong preference for TypeScript.',
+            tagline: 'AI-focused tech lead',
+          },
+          preferences: [
+            {
+              conclusionDirectives: 'Prefer concise responses with code examples',
               id: 'pref-1',
             },
           ],

@@ -84,3 +84,33 @@ exports[`UserMemoryInjector > memory types > should inject preferences correctly
 </preferences>
 </user_memory>"
 `;
+
+exports[`UserMemoryInjector > persona injection > should inject persona combined with other memory types 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<persona tagline="Design-minded engineer">
+A product designer turned engineer.
+</persona>
+<contexts count="1">
+  <context id="ctx-1" title="Context">Context desc</context>
+</contexts>
+<experiences count="1">
+  <experience id="exp-1">
+    <situation>Situation</situation>
+    <key_learning>Learning</key_learning>
+  </experience>
+</experiences>
+<preferences count="1">
+  <preference id="pref-1">Preference</preference>
+</preferences>
+</user_memory>"
+`;
+
+exports[`UserMemoryInjector > persona injection > should inject persona via UserMemoryInjector 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<persona tagline="Senior OSS engineer">
+A senior engineer who loves TypeScript and open-source development.
+</persona>
+</user_memory>"
+`;

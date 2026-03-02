@@ -167,6 +167,48 @@ describe('UserMemoryInjector', () => {
     });
   });
 
+  describe('persona injection', () => {
+    it('should inject persona via UserMemoryInjector', async () => {
+      const provider = new UserMemoryInjector({
+        memories: {
+          contexts: [],
+          experiences: [],
+          persona: {
+            narrative: 'A senior engineer who loves TypeScript and open-source development.',
+            tagline: 'Senior OSS engineer',
+          },
+          preferences: [],
+        },
+      });
+
+      const context = createContext([{ content: 'Hello', id: 'user-1', role: 'user' }]);
+
+      const result = await provider.process(context);
+
+      expect(result.messages[0].content).toMatchSnapshot();
+    });
+
+    it('should inject persona combined with other memory types', async () => {
+      const provider = new UserMemoryInjector({
+        memories: {
+          contexts: [{ description: 'Context desc', id: 'ctx-1', title: 'Context' }],
+          experiences: [{ id: 'exp-1', keyLearning: 'Learning', situation: 'Situation' }],
+          persona: {
+            narrative: 'A product designer turned engineer.',
+            tagline: 'Design-minded engineer',
+          },
+          preferences: [{ conclusionDirectives: 'Preference', id: 'pref-1' }],
+        },
+      });
+
+      const context = createContext([{ content: 'Hello', id: 'user-1', role: 'user' }]);
+
+      const result = await provider.process(context);
+
+      expect(result.messages[0].content).toMatchSnapshot();
+    });
+  });
+
   describe('XML format', () => {
     it('should handle null or undefined values gracefully', async () => {
       const provider = new UserMemoryInjector({

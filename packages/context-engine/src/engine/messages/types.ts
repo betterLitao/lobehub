@@ -124,6 +124,12 @@ export interface UserMemoryIdentityItem {
   [key: string]: unknown;
 }
 
+export interface UserMemoryPersonaItem {
+  narrative?: string | null;
+  tagline?: string | null;
+  [key: string]: unknown;
+}
+
 /**
  * User memory data structure
  * Compatible with SearchMemoryResult from @lobechat/types
@@ -133,6 +139,7 @@ export interface UserMemoryData {
   contexts: UserMemoryContextItem[];
   experiences: UserMemoryExperienceItem[];
   identities?: UserMemoryIdentityItem[];
+  persona?: UserMemoryPersonaItem;
   preferences: UserMemoryPreferenceItem[];
 }
 
