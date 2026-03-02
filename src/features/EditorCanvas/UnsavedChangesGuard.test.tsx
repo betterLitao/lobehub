@@ -8,16 +8,16 @@ import UnsavedChangesGuard from './UnsavedChangesGuard';
 
 const useBlockerMock = vi.hoisted(() => vi.fn());
 const messageLoadingMock = vi.hoisted(() => vi.fn());
-const messageSuccessMock = vi.hoisted(() => vi.fn());
+const messageDestroyMock = vi.hoisted(() => vi.fn());
 const messageErrorMock = vi.hoisted(() => vi.fn());
 
 vi.mock('antd', () => ({
   App: {
     useApp: () => ({
       message: {
+        destroy: messageDestroyMock,
         error: messageErrorMock,
         loading: messageLoadingMock,
-        success: messageSuccessMock,
       },
     }),
   },
@@ -30,7 +30,8 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const actual = (await vi.importActual('react-router-dom')) as typeof import('react-router-dom');
 
   return {
     ...actual,
@@ -65,7 +66,7 @@ describe('UnsavedChangesGuard', () => {
     vi.restoreAllMocks();
     useBlockerMock.mockReset();
     messageLoadingMock.mockReset();
-    messageSuccessMock.mockReset();
+    messageDestroyMock.mockReset();
     messageErrorMock.mockReset();
     useBlockerMock.mockReturnValue(createMockBlocker('unblocked'));
   });
@@ -84,9 +85,7 @@ describe('UnsavedChangesGuard', () => {
       expect(messageLoadingMock).toHaveBeenCalledWith(
         expect.objectContaining({ content: 'pageEditor.saving', duration: 0 }),
       );
-      expect(messageSuccessMock).toHaveBeenCalledWith(
-        expect.objectContaining({ content: 'pageEditor.autoSaveMessage' }),
-      );
+      expect(messageDestroyMock).toHaveBeenCalled();
       expect(blocker.proceed).toHaveBeenCalledTimes(1);
       expect(blocker.reset).not.toHaveBeenCalled();
     });
