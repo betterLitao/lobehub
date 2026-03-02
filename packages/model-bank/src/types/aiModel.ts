@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { ModelParamsSchema, VideoModelParamsSchema } from '../standard-parameters';
+import { type ModelParamsSchema, type VideoModelParamsSchema } from '../standard-parameters';
 
 export type ModelPriceCurrency = 'CNY' | 'USD';
 
@@ -255,8 +255,12 @@ export type ExtendParamsType =
   | 'thinkingBudget'
   | 'thinkingLevel'
   | 'thinkingLevel2'
+  | 'thinkingLevel3'
+  | 'thinkingLevel4'
   | 'imageAspectRatio'
+  | 'imageAspectRatio2'
   | 'imageResolution'
+  | 'imageResolution2'
   | 'urlContext';
 
 export interface AiModelSettings {
@@ -284,8 +288,12 @@ export const ExtendParamsTypeSchema = z.enum([
   'thinkingBudget',
   'thinkingLevel',
   'thinkingLevel2',
+  'thinkingLevel3',
+  'thinkingLevel4',
   'imageAspectRatio',
+  'imageAspectRatio2',
   'imageResolution',
+  'imageResolution2',
   'urlContext',
 ]);
 

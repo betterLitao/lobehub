@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys-fix/sort-keys-fix */
 import debug from 'debug';
 
 import type { OpenAIChatMessage } from '@/types/index';
@@ -23,15 +22,21 @@ import {
 } from '../../processors';
 import {
   AgentBuilderContextInjector,
-  GroupAgentBuilderContextInjector,
-  GroupContextInjector,
+  EvalContextSystemInjector,
+  ForceFinishSummaryInjector,
+  AgentManagementContextInjector,
   GTDPlanInjector,
   GTDTodoInjector,
+  GroupAgentBuilderContextInjector,
+  GroupContextInjector,
   HistorySummaryProvider,
   KnowledgeInjector,
   PageEditorContextInjector,
   PageSelectionsInjector,
+  SkillContextProvider,
+  SystemDateProvider,
   SystemRoleInjector,
+  ToolDiscoveryProvider,
   ToolSystemRoleProvider,
   UserMemoryInjector,
 } from '../../providers';
@@ -115,14 +120,19 @@ export class MessagesEngine {
       provider,
       systemRole,
       inputTemplate,
+      forceFinish,
       historySummary,
       formatHistorySummary,
       knowledge,
+      skillsConfig,
+      toolDiscoveryConfig,
       toolsConfig,
       capabilities,
       variableGenerators,
       fileContext,
       agentBuilderContext,
+      evalContext,
+      agentManagementContext,
       groupAgentBuilderContext,
       agentGroup,
       gtd,
@@ -130,9 +140,12 @@ export class MessagesEngine {
       initialContext,
       stepContext,
       pageContentContext,
+      enableSystemDate,
     } = this.params;
 
     const isAgentBuilderEnabled = !!agentBuilderContext;
+    const isAgentManagementEnabled = !!agentManagementContext;
+
     const isGroupAgentBuilderEnabled = !!groupAgentBuilderContext;
     const isAgentGroupEnabled = agentGroup?.agentMap && Object.keys(agentGroup.agentMap).length > 0;
     const isGroupContextEnabled =
@@ -144,6 +157,13 @@ export class MessagesEngine {
     const isGTDPlanEnabled = gtd?.enabled && gtd?.plan;
     const isGTDTodoEnabled = gtd?.enabled && gtd?.todos;
 
+    // System date is redundant when web-browsing or memory tools are enabled,
+    // as they already include current date in their system prompts
+    const toolIds = toolsConfig?.tools || [];
+    const hasDateAwareTools =
+      toolIds.includes('lobe-web-browsing') || toolIds.includes('lobe-user-memory');
+    const isSystemDateEnabled = enableSystemDate !== false && !hasDateAwareTools;
+
     return [
       // =============================================
       // Phase 1: System Role Injection
@@ -152,16 +172,22 @@ export class MessagesEngine {
       // 1. System role injection (agent's system role)
       new SystemRoleInjector({ systemRole }),
 
+      // 2. Eval context injection (appends envPrompt to system message)
+      new EvalContextSystemInjector({ enabled: !!evalContext?.envPrompt, evalContext }),
+
+      // 3. System date injection (appends current date to system message)
+      new SystemDateProvider({ enabled: isSystemDateEnabled }),
+
       // =============================================
       // Phase 2: First User Message Context Injection
       // These providers inject content before the first user message
       // Order matters: first executed = first in content
       // =============================================
 
-      // 2. User memory injection (conditionally added, injected first)
+      // 4. User memory injection (conditionally added, injected first)
       ...(isUserMemoryEnabled ? [new UserMemoryInjector(userMemory)] : []),
 
-      // 3. Group context injection (agent identity and group info for multi-agent chat)
+      // 5. Group context injection (agent identity and group info for multi-agent chat)
       new GroupContextInjector({
         currentAgentId: agentGroup?.currentAgentId,
         currentAgentName: agentGroup?.currentAgentName,
@@ -172,53 +198,73 @@ export class MessagesEngine {
         systemPrompt: agentGroup?.systemPrompt,
       }),
 
-      // 4. GTD Plan injection (conditionally added, after user memory, before knowledge)
+      // 6. GTD Plan injection (conditionally added, after user memory, before knowledge)
       ...(isGTDPlanEnabled ? [new GTDPlanInjector({ enabled: true, plan: gtd.plan })] : []),
 
-      // 5. Knowledge injection (full content for agent files + metadata for knowledge bases)
+      // 7. Knowledge injection (full content for agent files + metadata for knowledge bases)
       new KnowledgeInjector({
         fileContents: knowledge?.fileContents,
         knowledgeBases: knowledge?.knowledgeBases,
       }),
 
+      // 8. Tool Discovery context injection (available tools for dynamic activation)
+      ...(toolDiscoveryConfig?.availableTools && toolDiscoveryConfig.availableTools.length > 0
+        ? [new ToolDiscoveryProvider({ availableTools: toolDiscoveryConfig.availableTools })]
+        : []),
+
       // =============================================
       // Phase 3: Additional System Context
       // =============================================
 
-      // 6. Agent Builder context injection (current agent config/meta for editing)
+      // 9. Agent Builder context injection (current agent config/meta for editing)
       new AgentBuilderContextInjector({
         enabled: isAgentBuilderEnabled,
         agentContext: agentBuilderContext,
       }),
 
-      // 7. Group Agent Builder context injection (current group config/members for editing)
+      // 7. Agent Management context injection (available models and plugins for agent creation)
+      new AgentManagementContextInjector({
+        enabled: isAgentManagementEnabled,
+        context: agentManagementContext,
+      }),
+
+      // 8. Group Agent Builder context injection (current group config/members for editing)
       new GroupAgentBuilderContextInjector({
         enabled: isGroupAgentBuilderEnabled,
         groupContext: groupAgentBuilderContext,
       }),
 
-      // 8. Tool system role injection (conditionally added)
-      ...(toolsConfig?.manifests && toolsConfig.manifests.length > 0
+      // 11. Skill context injection (conditionally added)
+      ...(skillsConfig?.enabledSkills && skillsConfig.enabledSkills.length > 0
         ? [
-            new ToolSystemRoleProvider({
-              isCanUseFC: capabilities?.isCanUseFC || (() => true),
-              manifests: toolsConfig.manifests,
-              model,
-              provider,
+            new SkillContextProvider({
+              enabledSkills: skillsConfig.enabledSkills,
             }),
           ]
         : []),
 
-      // 9. History summary injection
+      // 12. Tool system role injection (conditionally added)
+      ...(toolsConfig?.manifests && toolsConfig.manifests.length > 0
+        ? [
+          new ToolSystemRoleProvider({
+            isCanUseFC: capabilities?.isCanUseFC || (() => true),
+            manifests: toolsConfig.manifests,
+            model,
+            provider,
+          }),
+        ]
+        : []),
+
+      // 13. History summary injection
       new HistorySummaryProvider({
         formatHistorySummary,
         historySummary,
       }),
 
-      // 12. Page Selections injection (inject user-selected text into each user message that has them)
+      // 14. Page Selections injection (inject user-selected text into each user message that has them)
       new PageSelectionsInjector({ enabled: isPageEditorEnabled }),
 
-      // 10. Page Editor context injection (inject current page content to last user message)
+      // 15. Page Editor context injection (inject current page content to last user message)
       new PageEditorContextInjector({
         enabled: isPageEditorEnabled,
         // Use direct pageContentContext if provided (server-side), otherwise build from initialContext + stepContext (frontend)
@@ -226,84 +272,85 @@ export class MessagesEngine {
           ? pageContentContext
           : initialContext?.pageEditor
             ? {
-                markdown: initialContext.pageEditor.markdown,
-                metadata: {
-                  charCount: initialContext.pageEditor.metadata.charCount,
-                  lineCount: initialContext.pageEditor.metadata.lineCount,
-                  title: initialContext.pageEditor.metadata.title,
-                },
-                // Use latest XML from stepContext if available, otherwise fallback to initial XML
-                xml: stepContext?.stepPageEditor?.xml || initialContext.pageEditor.xml,
-              }
+              markdown: initialContext.pageEditor.markdown,
+              metadata: {
+                charCount: initialContext.pageEditor.metadata.charCount,
+                lineCount: initialContext.pageEditor.metadata.lineCount,
+                title: initialContext.pageEditor.metadata.title,
+              },
+              // Use latest XML from stepContext if available, otherwise fallback to initial XML
+              xml: stepContext?.stepPageEditor?.xml || initialContext.pageEditor.xml,
+            }
             : undefined,
       }),
 
-      // 11. GTD Todo injection (conditionally added, at end of last user message)
+      // 16. GTD Todo injection (conditionally added, at end of last user message)
       ...(isGTDTodoEnabled ? [new GTDTodoInjector({ enabled: true, todos: gtd.todos })] : []),
 
       // =============================================
       // Phase 4: Message Transformation
       // =============================================
 
-      // 13. Input template processing
+      // 17. Input template processing
       new InputTemplateProcessor({ inputTemplate }),
 
-      // 14. Placeholder variables processing
+      // 18. Placeholder variables processing
       new PlaceholderVariablesProcessor({
         variableGenerators: variableGenerators || {},
       }),
 
-      // 15. AgentCouncil message flatten (convert role=agentCouncil to standard assistant + tool messages)
+      // 19. AgentCouncil message flatten (convert role=agentCouncil to standard assistant + tool messages)
       new AgentCouncilFlattenProcessor(),
 
-      // 16. Group message flatten (convert role=assistantGroup to standard assistant + tool messages)
+      // 20. Group message flatten (convert role=assistantGroup to standard assistant + tool messages)
       new GroupMessageFlattenProcessor(),
 
-      // 17. Tasks message flatten (convert role=tasks to individual task messages)
+      // 21. Tasks message flatten (convert role=tasks to individual task messages)
       new TasksFlattenProcessor(),
 
-      // 18. Task message processing (convert role=task to assistant with instruction + content)
+      // 22. Task message processing (convert role=task to assistant with instruction + content)
       new TaskMessageProcessor(),
 
-      // 19. Supervisor role restore (convert role=supervisor back to role=assistant for model)
+      // 23. Supervisor role restore (convert role=supervisor back to role=assistant for model)
       new SupervisorRoleRestoreProcessor(),
 
-      // 19b. Compressed group role transform (convert role=compressedGroup to role=user for model)
+      // 24. Compressed group role transform (convert role=compressedGroup to role=user for model)
       new CompressedGroupRoleTransformProcessor(),
 
-      // 20. Group orchestration filter (remove supervisor's orchestration messages like broadcast/speak)
+      // 25. Group orchestration filter (remove supervisor's orchestration messages like broadcast/speak)
       // This must be BEFORE GroupRoleTransformProcessor so we filter based on original agentId/tools
       ...(isAgentGroupEnabled && agentGroup.agentMap && agentGroup.currentAgentId
         ? [
-            new GroupOrchestrationFilterProcessor({
-              agentMap: Object.fromEntries(
-                Object.entries(agentGroup.agentMap).map(([id, info]) => [id, { role: info.role }]),
-              ),
-              currentAgentId: agentGroup.currentAgentId,
-              // Only enabled when current agent is NOT supervisor (supervisor needs to see orchestration history)
-              enabled: agentGroup.currentAgentRole !== 'supervisor',
-            }),
-          ]
+          new GroupOrchestrationFilterProcessor({
+            agentMap: Object.fromEntries(
+              Object.entries(agentGroup.agentMap).map(([id, info]) => [id, { role: info.role }]),
+            ),
+            currentAgentId: agentGroup.currentAgentId,
+            // Only enabled when current agent is NOT supervisor (supervisor needs to see orchestration history)
+            enabled: agentGroup.currentAgentRole !== 'supervisor',
+          }),
+        ]
         : []),
 
-      // 21. Group role transform (convert other agents' messages to user role with speaker tags)
+      // 26. Group role transform (convert other agents' messages to user role with speaker tags)
       // This must be BEFORE ToolCallProcessor so other agents' tool messages are converted first
       ...(isAgentGroupEnabled && agentGroup.currentAgentId
         ? [
-            new GroupRoleTransformProcessor({
-              agentMap: agentGroup.agentMap!,
-              currentAgentId: agentGroup.currentAgentId,
-            }),
-          ]
+          new GroupRoleTransformProcessor({
+            agentMap: agentGroup.agentMap!,
+            currentAgentId: agentGroup.currentAgentId,
+          }),
+        ]
         : []),
 
       // =============================================
       // Phase 5: Content Processing
       // =============================================
-      // 22. Reaction feedback injection (append user reaction feedback to assistant messages)
+
+      // 27. Reaction feedback injection (append user reaction feedback to assistant messages)
       new ReactionFeedbackProcessor({ enabled: true }),
 
-      // 22. Message content processing (image encoding, etc.)
+      // 28. Message content processing (image encoding, etc.)
       new MessageContentProcessor({
         fileContext: fileContext || { enabled: true, includeFileUrl: true },
         isCanUseVideo: capabilities?.isCanUseVideo || (() => false),
@@ -312,7 +359,7 @@ export class MessagesEngine {
         provider,
       }),
 
-      // 23. Tool call processing
+      // 29. Tool call processing
       new ToolCallProcessor({
         genToolCallingName: this.toolNameResolver.generate.bind(this.toolNameResolver),
         isCanUseFC: capabilities?.isCanUseFC || (() => true),
@@ -320,10 +367,13 @@ export class MessagesEngine {
         provider,
       }),
 
-      // 24. Tool message reordering
+      // 30. Tool message reordering
       new ToolMessageReorder(),
 
-      // 25. Message cleanup (final step, keep only necessary fields)
+      // 31. Force finish summary injection (when maxSteps exceeded, inject summary prompt)
+      new ForceFinishSummaryInjector({ enabled: !!forceFinish }),
+
+      // 32. Message cleanup (final step, keep only necessary fields)
       new MessageCleanupProcessor(),
     ];
   }

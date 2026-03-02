@@ -1,25 +1,25 @@
-import type {
-  GenerateContentConfig,
-  HttpOptions,
-  ThinkingConfig,
-  Tool as GoogleFunctionCallTool,
+import {
+  type GenerateContentConfig,
+  type HttpOptions,
+  type ThinkingConfig,
+  type Tool as GoogleFunctionCallTool,
 } from '@google/genai';
 import { GoogleGenAI } from '@google/genai';
 import debug from 'debug';
 
-import type { LobeRuntimeAI } from '../../core/BaseAI';
+import { type LobeRuntimeAI } from '../../core/BaseAI';
 import { buildGoogleMessages, buildGoogleTools } from '../../core/contextBuilders/google';
 import { GoogleGenerativeAIStream, VertexAIStream } from '../../core/streams';
 import { LOBE_ERROR_KEY } from '../../core/streams/google';
-import type {
-  ChatCompletionTool,
-  ChatMethodOptions,
-  ChatStreamPayload,
-  GenerateObjectOptions,
-  GenerateObjectPayload,
+import {
+  type ChatCompletionTool,
+  type ChatMethodOptions,
+  type ChatStreamPayload,
+  type GenerateObjectOptions,
+  type GenerateObjectPayload,
 } from '../../types';
 import { AgentRuntimeErrorType } from '../../types/error';
-import type { CreateImagePayload, CreateImageResponse } from '../../types/image';
+import { type CreateImagePayload, type CreateImageResponse } from '../../types/image';
 import { AgentRuntimeError } from '../../utils/createError';
 import { debugStream } from '../../utils/debugStream';
 import { getModelPricing } from '../../utils/getModelPricing';
@@ -40,6 +40,7 @@ const modelsWithModalities = new Set([
   'gemini-2.5-flash-image-preview',
   'gemini-2.5-flash-image',
   'gemini-3-pro-image-preview',
+  'gemini-3.1-flash-image-preview',
   'nano-banana-pro-preview',
 ]);
 
@@ -130,7 +131,7 @@ export class LobeGoogleAI implements LobeRuntimeAI {
       : undefined;
 
     this.apiKey = apiKey;
-    this.client = client ? client : new GoogleGenAI({ apiKey, httpOptions });
+    this.client = client ?? new GoogleGenAI({ apiKey, httpOptions });
     this.baseURL = client ? undefined : baseURL || DEFAULT_BASE_URL;
     this.isVertexAi = isVertexAi || false;
 
@@ -197,7 +198,9 @@ export class LobeGoogleAI implements LobeRuntimeAI {
         systemInstruction: modelsDisableInstuction.has(model)
           ? undefined
           : (payload.system as string),
-        temperature: payload.temperature,
+        temperature: modelsWithModalities.has(model)
+          ? Math.min(payload.temperature ?? 1, 1)
+          : payload.temperature,
         thinkingConfig:
           modelsDisableInstuction.has(model) || model.toLowerCase().includes('learnlm')
             ? undefined
@@ -214,8 +217,8 @@ export class LobeGoogleAI implements LobeRuntimeAI {
         : 'DEBUG_GOOGLE_CHAT_COMPLETION';
 
       if (process.env[key] === '1') {
-        console.log('[requestPayload]');
-        console.log(JSON.stringify(finalPayload), '\n');
+        log('[requestPayload]');
+        log(JSON.stringify(finalPayload), '\n');
       }
 
       const geminiStreamResponse = await this.client.models.generateContentStream(finalPayload);
@@ -399,8 +402,11 @@ export class LobeGoogleAI implements LobeRuntimeAI {
 
   async models(options?: { signal?: AbortSignal }) {
     try {
-      const url = `${this.baseURL}/v1beta/models?key=${this.apiKey}`;
+      const url = `${this.baseURL}/v1beta/models`;
       const response = await fetch(url, {
+        headers: {
+          'x-goog-api-key': this.apiKey!,
+        },
         method: 'GET',
         signal: options?.signal,
       });
