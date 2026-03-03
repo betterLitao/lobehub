@@ -14,17 +14,17 @@ export const seedance15ProParams: VideoModelParamsSchema = {
   duration: { default: 5, max: 12, min: 4 },
   endImageUrl: {
     default: null,
-    height: { min: 300 },
+    height: { max: 6000, min: 300 },
     maxFileSize: 30 * 1024 * 1024,
     requiresImageUrl: true,
-    width: { min: 300 },
+    width: { max: 6000, min: 300 },
   },
   generateAudio: { default: true },
   imageUrl: {
     default: null,
-    height: { min: 300 },
+    height: { max: 6000, min: 300 },
     maxFileSize: 30 * 1024 * 1024,
-    width: { min: 300 },
+    width: { max: 6000, min: 300 },
   },
   prompt: { default: '' },
   resolution: {
