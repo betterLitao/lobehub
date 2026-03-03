@@ -1280,6 +1280,11 @@ export class AgentRuntimeService {
         (m: { content?: string; role: string }) => m.role === 'assistant' && m.content,
       )?.content;
 
+    // Extract first user prompt for downstream consumers (e.g., topic title summarization)
+    const userPrompt = state.messages?.find(
+      (m: { content?: string; role: string }) => m.role === 'user',
+    )?.content;
+
     const delivery = state.metadata?.webhookDelivery || 'fetch';
 
     await this.deliverWebhook(
@@ -1297,8 +1302,11 @@ export class AgentRuntimeService {
         status: state.status,
         steps: state.stepCount,
         toolCalls: state.usage?.tools?.totalCalls,
+        topicId: state.metadata?.topicId,
         totalTokens: state.usage?.llm?.tokens?.total,
         type: 'completion',
+        userId: state.metadata?.userId,
+        userPrompt,
       },
       delivery,
       operationId,

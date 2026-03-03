@@ -106,6 +106,12 @@ interface InternalExecAgentParams extends ExecAgentParams {
    * Defaults to true. Set to false for non-streaming scenarios (e.g., bot integrations).
    */
   stream?: boolean;
+  /**
+   * Custom title for the topic.
+   * When provided (including empty string), overrides the default prompt-based title.
+   * When undefined, falls back to prompt.slice(0, 50).
+   */
+  title?: string;
   /** Topic creation trigger source ('cron' | 'chat' | 'api') */
   trigger?: string;
   /**
@@ -182,6 +188,7 @@ export class AiAgentService {
       files,
       stepCallbacks,
       stream,
+      title,
       trigger,
       cronJobId,
       evalContext,
@@ -231,7 +238,8 @@ export class AiAgentService {
       const newTopic = await this.topicModel.create({
         agentId: resolvedAgentId,
         metadata,
-        title: prompt.slice(0, 50) + (prompt.length > 50 ? '...' : ''),
+        title:
+          title !== undefined ? title : prompt.slice(0, 50) + (prompt.length > 50 ? '...' : ''),
         trigger,
       });
       topicId = newTopic.id;
