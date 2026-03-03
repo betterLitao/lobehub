@@ -88,22 +88,28 @@ export const useUploadFilesValidation = (
         const result = await validateImageDimensions(file, imageConstraints);
         if (!result.valid) {
           if (result.error === 'imageDimensionTooSmall') {
+            const parts = [];
+            if (result.minWidth) parts.push(`width ≥ ${result.minWidth}px`);
+            if (result.minHeight) parts.push(`height ≥ ${result.minHeight}px`);
+
             message.error(
               t('ImageUpload.validation.imageDimensionTooSmall', {
                 fileName: result.fileName || file.name,
                 height: result.height,
-                minHeight: result.minHeight,
-                minWidth: result.minWidth,
+                minDimension: parts.join(', '),
                 width: result.width,
               }),
             );
           } else if (result.error === 'imageDimensionTooLarge') {
+            const parts = [];
+            if (result.maxWidth) parts.push(`width ≤ ${result.maxWidth}px`);
+            if (result.maxHeight) parts.push(`height ≤ ${result.maxHeight}px`);
+
             message.error(
               t('ImageUpload.validation.imageDimensionTooLarge', {
                 fileName: result.fileName || file.name,
                 height: result.height,
-                maxHeight: result.maxHeight,
-                maxWidth: result.maxWidth,
+                maxDimension: parts.join(', '),
                 width: result.width,
               }),
             );
