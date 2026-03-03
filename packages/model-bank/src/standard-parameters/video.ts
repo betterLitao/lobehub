@@ -23,6 +23,8 @@ export const VideoModelParamsMetaSchema = z.object({
 
   imageUrl: z
     .object({
+      /** Aspect ratio (width/height) constraints */
+      aspectRatio: z.object({ max: z.number().optional(), min: z.number().optional() }).optional(),
       default: z.string().nullable().optional(),
       description: z.string().optional(),
       height: z.object({ max: z.number().optional(), min: z.number().optional() }).optional(),
@@ -34,6 +36,8 @@ export const VideoModelParamsMetaSchema = z.object({
 
   endImageUrl: z
     .object({
+      /** Aspect ratio (width/height) constraints */
+      aspectRatio: z.object({ max: z.number().optional(), min: z.number().optional() }).optional(),
       default: z.string().nullable().optional(),
       description: z.string().optional(),
       height: z.object({ max: z.number().optional(), min: z.number().optional() }).optional(),

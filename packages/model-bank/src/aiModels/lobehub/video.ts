@@ -13,6 +13,7 @@ export const seedance15ProParams: VideoModelParamsSchema = {
   cameraFixed: { default: false },
   duration: { default: 5, max: 12, min: 4 },
   endImageUrl: {
+    aspectRatio: { max: 2.5, min: 0.4 },
     default: null,
     height: { max: 6000, min: 300 },
     maxFileSize: 30 * 1024 * 1024,
@@ -21,6 +22,7 @@ export const seedance15ProParams: VideoModelParamsSchema = {
   },
   generateAudio: { default: true },
   imageUrl: {
+    aspectRatio: { max: 2.5, min: 0.4 },
     default: null,
     height: { max: 6000, min: 300 },
     maxFileSize: 30 * 1024 * 1024,

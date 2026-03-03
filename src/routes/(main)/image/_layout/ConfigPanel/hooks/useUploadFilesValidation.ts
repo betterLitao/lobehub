@@ -113,6 +113,20 @@ export const useUploadFilesValidation = (
                 width: result.width,
               }),
             );
+          } else if (result.error === 'imageAspectRatioInvalid') {
+            const ratio =
+              result.width && result.height ? (result.width / result.height).toFixed(2) : '?';
+            const min = imageConstraints.aspectRatio?.min;
+            const max = imageConstraints.aspectRatio?.max;
+            const range = min && max ? `${min}–${max}` : min ? `≥ ${min}` : `≤ ${max}`;
+
+            message.error(
+              t('ImageUpload.validation.imageAspectRatioInvalid', {
+                actualRatio: ratio,
+                fileName: result.fileName || file.name,
+                range,
+              }),
+            );
           }
           return false;
         }

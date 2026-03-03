@@ -18,6 +18,8 @@ export const formatFileSize = (bytes: number): string => {
 };
 
 export interface ImageConstraints {
+  /** Aspect ratio (width/height) constraints */
+  aspectRatio?: { max?: number; min?: number };
   height?: { max?: number; min?: number };
   width?: { max?: number; min?: number };
 }
@@ -133,6 +135,20 @@ export const validateImageDimensions = async (
       height,
       maxHeight: maxH,
       maxWidth: maxW,
+      valid: false,
+      width,
+    };
+  }
+
+  const ratio = width / height;
+  const minRatio = constraints.aspectRatio?.min;
+  const maxRatio = constraints.aspectRatio?.max;
+
+  if ((minRatio && ratio < minRatio) || (maxRatio && ratio > maxRatio)) {
+    return {
+      error: 'imageAspectRatioInvalid',
+      fileName: file.name,
+      height,
       valid: false,
       width,
     };
