@@ -116,6 +116,7 @@ export interface UserMemoryActivityItem {
 }
 
 export interface UserMemoryIdentityItem {
+  capturedAt?: string | Date | null;
   description?: string | null;
   id?: string;
   role?: string | null;

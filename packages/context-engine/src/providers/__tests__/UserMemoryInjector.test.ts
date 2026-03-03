@@ -165,6 +165,31 @@ describe('UserMemoryInjector', () => {
 
       expect(result.messages[0].content).toMatchSnapshot();
     });
+
+    it('should inject identities with capturedAt', async () => {
+      const provider = new UserMemoryInjector({
+        memories: {
+          contexts: [],
+          experiences: [],
+          identities: [
+            {
+              capturedAt: '2025-02-23T10:30:00.000Z',
+              description: 'User is a senior engineer',
+              id: 'id-1',
+              role: 'Engineer',
+              type: 'professional',
+            },
+          ],
+          preferences: [],
+        },
+      });
+
+      const context = createContext([{ content: 'Hello', id: 'user-1', role: 'user' }]);
+
+      const result = await provider.process(context);
+
+      expect(result.messages[0].content).toMatchSnapshot();
+    });
   });
 
   describe('persona injection', () => {

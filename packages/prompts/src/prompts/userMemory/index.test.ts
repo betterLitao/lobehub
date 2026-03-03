@@ -348,6 +348,55 @@ describe('promptUserMemory', () => {
       });
       expect(result).toMatchSnapshot();
     });
+
+    it('should format identity with capturedAt string', () => {
+      const result = promptUserMemory({
+        memories: {
+          identities: [
+            {
+              capturedAt: '2025-02-23T10:30:00.000Z',
+              description: 'User is a software engineer',
+              id: 'id-1',
+              role: 'Engineer',
+              type: 'professional',
+            },
+          ],
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should format identity with capturedAt Date object', () => {
+      const result = promptUserMemory({
+        memories: {
+          identities: [
+            {
+              capturedAt: new Date('2025-06-15T00:00:00.000Z'),
+              description: 'User lives in Tokyo',
+              id: 'id-2',
+              type: 'demographic',
+            },
+          ],
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should skip capturedAt when null', () => {
+      const result = promptUserMemory({
+        memories: {
+          identities: [
+            {
+              capturedAt: null,
+              description: 'User is a runner',
+              id: 'id-3',
+              type: 'personal',
+            },
+          ],
+        },
+      });
+      expect(result).toMatchSnapshot();
+    });
   });
 
   describe('persona only', () => {
@@ -355,7 +404,8 @@ describe('promptUserMemory', () => {
       const result = promptUserMemory({
         memories: {
           persona: {
-            narrative: 'A senior software engineer based in Shanghai who specializes in frontend development with React and TypeScript. Passionate about open source and building developer tools.',
+            narrative:
+              'A senior software engineer based in Shanghai who specializes in frontend development with React and TypeScript. Passionate about open source and building developer tools.',
             tagline: 'Senior frontend engineer & OSS contributor',
           },
         },
@@ -367,7 +417,8 @@ describe('promptUserMemory', () => {
       const result = promptUserMemory({
         memories: {
           persona: {
-            narrative: 'A product designer who transitioned from engineering. Enjoys bridging the gap between design and development.',
+            narrative:
+              'A product designer who transitioned from engineering. Enjoys bridging the gap between design and development.',
           },
         },
       });
@@ -545,7 +596,8 @@ describe('promptUserMemory', () => {
             },
           ],
           persona: {
-            narrative: 'A tech lead who focuses on AI-powered developer tools and has a strong preference for TypeScript.',
+            narrative:
+              'A tech lead who focuses on AI-powered developer tools and has a strong preference for TypeScript.',
             tagline: 'AI-focused tech lead',
           },
           preferences: [

@@ -75,6 +75,15 @@ exports[`UserMemoryInjector > memory types > should inject experiences correctly
 </user_memory>"
 `;
 
+exports[`UserMemoryInjector > memory types > should inject identities with capturedAt 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<identities count="1">
+  <identity type="professional" role="Engineer" id="id-1" capturedAt="2025-02-23">User is a senior engineer</identity>
+</identities>
+</user_memory>"
+`;
+
 exports[`UserMemoryInjector > memory types > should inject preferences correctly 1`] = `
 "<user_memory>
 <instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>

@@ -127,6 +127,24 @@ exports[`promptUserMemory > identities only > should format identities grouped b
 </user_memory>"
 `;
 
+exports[`promptUserMemory > identities only > should format identity with capturedAt Date object 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<identities count="1">
+  <identity type="demographic" id="id-2" capturedAt="2025-06-15">User lives in Tokyo</identity>
+</identities>
+</user_memory>"
+`;
+
+exports[`promptUserMemory > identities only > should format identity with capturedAt string 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<identities count="1">
+  <identity type="professional" role="Engineer" id="id-1" capturedAt="2025-02-23">User is a software engineer</identity>
+</identities>
+</user_memory>"
+`;
+
 exports[`promptUserMemory > identities only > should format single type identities (demographic only) 1`] = `
 "<user_memory>
 <instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
@@ -170,6 +188,15 @@ exports[`promptUserMemory > identities only > should handle identity without rol
 <instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
 <identities count="1">
   <identity type="personal" id="id-1">User enjoys hiking</identity>
+</identities>
+</user_memory>"
+`;
+
+exports[`promptUserMemory > identities only > should skip capturedAt when null 1`] = `
+"<user_memory>
+<instruction>The following are memories about this user retrieved from previous conversations. Use this information to personalize your responses and maintain continuity.</instruction>
+<identities count="1">
+  <identity type="personal" id="id-3">User is a runner</identity>
 </identities>
 </user_memory>"
 `;

@@ -451,7 +451,8 @@ export class AiAgentService {
     try {
       const userModel = new UserModel(this.db, this.userId);
       const settings = await userModel.getUserSettings();
-      globalMemoryEnabled = settings?.memory?.enabled !== false;
+      const memorySettings = settings?.memory as { enabled?: boolean } | undefined;
+      globalMemoryEnabled = memorySettings?.enabled !== false;
     } catch (error) {
       log('execAgent: failed to fetch user memory settings: %O', error);
     }

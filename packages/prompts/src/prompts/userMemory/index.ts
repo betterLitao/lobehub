@@ -23,6 +23,7 @@ export interface UserMemoryPreferenceItem {
 export type IdentityType = 'demographic' | 'personal' | 'professional';
 
 export interface UserMemoryIdentityItem {
+  capturedAt?: string | Date | null;
   description?: string | null;
   id?: string;
   role?: string | null;
@@ -103,11 +104,18 @@ const isValidIdentityItem = (item: UserMemoryIdentityItem): boolean => {
 /**
  * Formats a single identity memory item
  */
+const formatDateOnly = (value: string | Date): string => {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10); // "2025-02-23"
+};
+
 const formatIdentityItem = (item: UserMemoryIdentityItem): string => {
   const typeAttr = item.type ? ` type="${item.type}"` : '';
   const roleAttr = item.role ? ` role="${item.role}"` : '';
   const idAttr = item.id ? ` id="${item.id}"` : '';
-  return `  <identity${typeAttr}${roleAttr}${idAttr}>${item.description || ''}</identity>`;
+  const capturedAtAttr = item.capturedAt ? ` capturedAt="${formatDateOnly(item.capturedAt)}"` : '';
+  return `  <identity${typeAttr}${roleAttr}${idAttr}${capturedAtAttr}>${item.description || ''}</identity>`;
 };
 
 /**
