@@ -17,6 +17,13 @@ export default defineConfig({
       '@': resolve(__dirname, '../../src'),
 
     },
+    coverage: {
+      exclude: [
+        'src/server/**',
+        'src/repositories/dataImporter/deprecated/**',
+        'src/types/**',
+      ],
+    },
     environment: 'happy-dom',
     exclude: [
       'node_modules/**/**',
