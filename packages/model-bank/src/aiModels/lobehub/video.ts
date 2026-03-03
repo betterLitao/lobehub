@@ -12,9 +12,20 @@ export const seedance15ProParams: VideoModelParamsSchema = {
   },
   cameraFixed: { default: false },
   duration: { default: 5, max: 12, min: 4 },
-  endImageUrl: { default: null, maxFileSize: 30 * 1024 * 1024, requiresImageUrl: true },
+  endImageUrl: {
+    default: null,
+    height: { min: 300 },
+    maxFileSize: 30 * 1024 * 1024,
+    requiresImageUrl: true,
+    width: { min: 300 },
+  },
   generateAudio: { default: true },
-  imageUrl: { default: null, maxFileSize: 30 * 1024 * 1024 },
+  imageUrl: {
+    default: null,
+    height: { min: 300 },
+    maxFileSize: 30 * 1024 * 1024,
+    width: { min: 300 },
+  },
   prompt: { default: '' },
   resolution: {
     default: '720p',

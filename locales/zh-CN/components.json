@@ -76,6 +76,8 @@
   "ImageUpload.actions.dropMultipleFiles": "不支持多上传多个文件，只会使用第一个文件",
   "ImageUpload.placeholder.primary": "添加图片",
   "ImageUpload.placeholder.secondary": "点击或拖拽上传",
+  "ImageUpload.validation.imageDimensionTooLarge": "{{fileName}} ({{width}}x{{height}}) 尺寸过大，最大允许 {{maxWidth}}x{{maxHeight}}px",
+  "ImageUpload.validation.imageDimensionTooSmall": "{{fileName}} ({{width}}x{{height}}) 尺寸过小，最小要求 {{minWidth}}x{{minHeight}}px",
   "KeyValueEditor.addButton": "新增一行",
   "KeyValueEditor.deleteTooltip": "删除",
   "KeyValueEditor.duplicateKeyError": "键名必须唯一",

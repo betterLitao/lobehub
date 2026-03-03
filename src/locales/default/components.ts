@@ -88,6 +88,10 @@ export default {
     'Uploading multiple files at once is not supported; only the first file will be used',
   'ImageUpload.placeholder.primary': 'Add Image',
   'ImageUpload.placeholder.secondary': 'Click or drag to upload',
+  'ImageUpload.validation.imageDimensionTooLarge':
+    '{{fileName}} ({{width}}x{{height}}) is too large, maximum dimension allowed is {{maxWidth}}x{{maxHeight}}px',
+  'ImageUpload.validation.imageDimensionTooSmall':
+    '{{fileName}} ({{width}}x{{height}}) is too small, minimum dimension required is {{minWidth}}x{{minHeight}}px',
   'KeyValueEditor.addButton': 'Add a row',
   'KeyValueEditor.deleteTooltip': 'Delete',
   'KeyValueEditor.duplicateKeyError': 'Key must be unique',
