@@ -266,10 +266,24 @@ export class AgentRuntimeService {
       discordContext,
       evalContext,
       maxSteps,
+      userMemory,
     } = params;
 
     try {
-      log('[%s] Creating new operation (autoStart: %s)', operationId, autoStart);
+      const memories = userMemory?.memories;
+      log(
+        '[%s] Creating new operation (autoStart: %s) with params: model=%s, provider=%s, tools=%d, messages=%d, manifests=%d, memory=%s',
+        operationId,
+        autoStart,
+        agentConfig?.model,
+        agentConfig?.provider,
+        tools?.length ?? 0,
+        initialMessages.length,
+        toolManifestMap ? Object.keys(toolManifestMap).length : 0,
+        memories
+          ? `{contexts:${memories.contexts?.length ?? 0},experiences:${memories.experiences?.length ?? 0},preferences:${memories.preferences?.length ?? 0},identities:${memories.identities?.length ?? 0},activities:${memories.activities?.length ?? 0},persona:${memories.persona ? 'yes' : 'no'}}`
+          : 'none',
+      );
 
       // Initialize operation state - create state before saving
       const initialState = {
@@ -289,6 +303,7 @@ export class AgentRuntimeService {
           stepWebhook,
           stream,
           userId,
+          userMemory,
           webhookDelivery,
           workingDirectory: agentConfig?.chatConfig?.localSystem?.workingDirectory,
           ...appContext,

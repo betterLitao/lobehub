@@ -183,6 +183,7 @@ export const createRuntimeExecutors = (
           toolsConfig: {
             tools: agentConfig.plugins ?? [],
           },
+          userMemory: state.metadata?.userMemory,
         });
         processedMessages = processedResult;
       } else {

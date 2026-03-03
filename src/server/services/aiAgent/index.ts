@@ -23,11 +23,14 @@ import { MessageModel } from '@/database/models/message';
 import { PluginModel } from '@/database/models/plugin';
 import { ThreadModel } from '@/database/models/thread';
 import { TopicModel } from '@/database/models/topic';
+import { UserModel } from '@/database/models/user';
+import { UserPersonaModel } from '@/database/models/userMemory/persona';
 import {
   createServerAgentToolsEngine,
   type EvalContext,
   type ServerAgentToolsContext,
 } from '@/server/modules/Mecha';
+import { type ServerUserMemoryConfig } from '@/server/modules/Mecha/ContextEngineering/types';
 import { AgentService } from '@/server/services/agent';
 import { AgentRuntimeService } from '@/server/services/agentRuntime';
 import { type StepLifecycleCallbacks } from '@/server/services/agentRuntime/types';
@@ -440,7 +443,47 @@ export class AiAgentService {
       );
     }
 
-    // 8. Get existing messages if provided
+    // 8. Fetch user persona for memory injection
+    // Persona is user-level global memory, only depends on user's global memory setting
+    let userMemory: ServerUserMemoryConfig | undefined;
+
+    let globalMemoryEnabled = true; // default: enabled (matches DEFAULT_MEMORY_SETTINGS)
+    try {
+      const userModel = new UserModel(this.db, this.userId);
+      const settings = await userModel.getUserSettings();
+      globalMemoryEnabled = settings?.memory?.enabled !== false;
+    } catch (error) {
+      log('execAgent: failed to fetch user memory settings: %O', error);
+    }
+
+    log('execAgent: memory check — globalMemoryEnabled=%s', globalMemoryEnabled);
+
+    if (globalMemoryEnabled) {
+      try {
+        const personaModel = new UserPersonaModel(this.db, this.userId);
+        const persona = await personaModel.getLatestPersonaDocument();
+
+        if (persona?.persona) {
+          userMemory = {
+            fetchedAt: Date.now(),
+            memories: {
+              contexts: [],
+              experiences: [],
+              persona: {
+                narrative: persona.persona,
+                tagline: persona.tagline,
+              },
+              preferences: [],
+            },
+          };
+          log('execAgent: fetched user persona (version: %d)', persona.version);
+        }
+      } catch (error) {
+        log('execAgent: failed to fetch user persona: %O', error);
+      }
+    }
+
+    // 9. Get existing messages if provided
     let historyMessages: any[] = [];
     if (existingMessageIds.length > 0) {
       historyMessages = await this.messageModel.query({
@@ -589,6 +632,7 @@ export class AiAgentService {
         tools,
         userId: this.userId,
         userInterventionConfig,
+        userMemory,
         webhookDelivery,
       });
 
