@@ -16,7 +16,7 @@
     "@lobechat/types": "workspace:*"
   },
   "peerDependencies": {
-    "@icons-pack/react-simple-icons": "^13.8.0",
+    "@icons-pack/react-simple-icons": "^13.12.0",
     "@lobehub/ui": "^5",
     "klavis": "^2.15.0"
   }
